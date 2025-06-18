@@ -1,0 +1,44 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Google Cloud credentials
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up GCloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: genuine-park-463208-g0
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker
+
+      - name: Build & Push Docker image
+        run: |
+          docker build -t gcr.io/genuine-park-463208-g0/nginx-demo:latest .
+          docker push gcr.io/genuine-park-463208-g0/nginx-demo:latest
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials payfuture-gke-cluster --zone us-central1-a
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install nginx-demo ./helm/nginx \
+            --namespace dev \
+            --set image.repository=gcr.io/genuine-park-463208-g0/nginx-demo \
+            --set image.tag=latest

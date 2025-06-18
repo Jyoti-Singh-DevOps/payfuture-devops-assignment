@@ -1,0 +1,39 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  IMAGE_TAG: "latest"
+  IMAGE_NAME: "gcr.io/genuine-park-463208-g0/nginx-demo"
+
+build:
+  stage: build
+  script:
+    - echo "🔧 Building Docker image..."
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG ./nginx
+  only:
+    - main
+
+push:
+  stage: push
+  script:
+    - echo "📦 Pushing Docker image to GCR..."
+    - echo $GCLOUD_SERVICE_KEY | base64 -d > ${CI_PROJECT_DIR}/gcloud-key.json
+    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcloud-key.json
+    - gcloud auth configure-docker
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  script:
+    - echo "🚀 Deploying to GKE via Helm..."
+    - helm upgrade --install nginx-demo ./helm/nginx \
+        --namespace dev \
+        --create-namespace \
+        --set image.repository=$IMAGE_NAME,image.tag=$IMAGE_TAG
+  only:
+    - main
+
