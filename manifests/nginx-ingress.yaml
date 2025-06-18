@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-demo-ingress
+  namespace: dev
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+spec:
+  tls:
+  - hosts:
+    - your-domain.com
+    secretName: nginx-demo-tls
+  apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-demo-ingress
+  namespace: dev
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+spec:
+  tls:
+  - hosts:
+    - 35.232.128.148.nip.io
+    secretName: nginx-demo-tls
+  rules:
+  - host: 35.232.128.148.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-demo
+            port:
+              number: 80
+
