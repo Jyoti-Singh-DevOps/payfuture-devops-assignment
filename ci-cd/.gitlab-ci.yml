@@ -19,8 +19,8 @@ push:
   stage: push
   script:
     - echo "📦 Pushing Docker image to GCR..."
-    - echo $GCLOUD_SERVICE_KEY | base64 -d > ${CI_PROJECT_DIR}/gcloud-key.json
-    - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcloud-key.json
+    - echo "$GCP_SA_KEY" > key.json
+    - gcloud auth activate-service-account --key-file=key.json
     - gcloud auth configure-docker
     - docker push $IMAGE_NAME:$IMAGE_TAG
   only:
@@ -29,11 +29,12 @@ push:
 deploy:
   stage: deploy
   script:
-    - echo "🚀 Deploying to GKE via Helm..."
-    - helm upgrade --install nginx-demo ./helm/nginx \
-        --namespace dev \
-        --create-namespace \
-        --set image.repository=$IMAGE_NAME,image.tag=$IMAGE_TAG
+    - echo "🚀 Deploying to GKE using Helm..."
+    - echo "$GCP_SA_KEY" > key.json
+    - gcloud auth activate-service-account --key-file=key.json
+    - gcloud config set project genuine-park-463208-g0
+    - gcloud config set compute/zone us-central1-a
+    - gcloud container clusters get-credentials payfuture-gke-cluster
+    - helm upgrade --install nginx ./helm/nginx --namespace dev --create-namespace
   only:
     - main
-
