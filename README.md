@@ -5,3 +5,4 @@ This repository contains infrastructure and CI/CD setup for PayFuture.
 Trigger GitLab pipeline manually 🚀
 # Trigger GitLab pipeline
 # retrigger pipeline
+# retrigger pipeline
